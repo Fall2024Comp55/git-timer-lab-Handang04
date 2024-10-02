@@ -14,14 +14,16 @@ import acm.program.GraphicsProgram;
 import acm.util.RandomGenerator;
 
 public class DodgeBall extends GraphicsProgram implements ActionListener {
-	private static final int ENEMY_SPAWN_INTERVAL = 40;
+	
 	private ArrayList<GOval> balls;
 	private ArrayList<GRect> enemies;
 	private GLabel text;
 	private Timer movement;
 	private RandomGenerator rgen;
 	private int numTimes = -1;
+	private int enemiesRemoved = 0;
 	
+	private static final int ENEMY_SPAWN_INTERVAL = 40;
 	public static final int SIZE = 25;
 	public static final int SPEED = 2;
 	public static final int MS = 50;
@@ -34,7 +36,7 @@ public class DodgeBall extends GraphicsProgram implements ActionListener {
 		balls = new ArrayList<GOval>();
 		enemies = new ArrayList<GRect>();
 		
-		text = new GLabel(""+enemies.size(), 0, WINDOW_HEIGHT);
+		text = new GLabel(""+enemies.size(), 0, WINDOW_HEIGHT - 10);
 		add(text);
 		
 		movement = new Timer(MS, this);
@@ -47,8 +49,15 @@ public class DodgeBall extends GraphicsProgram implements ActionListener {
 		if(numTimes % ENEMY_SPAWN_INTERVAL == 0) {
 		    addAnEnemy();
 		}
+		
+		if (enemies.size() > MAX_ENEMIES) {
+			endGame();
+			return;
+		}
 		moveAllBallsOnce();
 		moveAllEnemiesOnce();
+		
+		
 	}
 	
 	public void mousePressed(MouseEvent e) {
@@ -94,7 +103,8 @@ public class DodgeBall extends GraphicsProgram implements ActionListener {
 			GObject obj = getElementAt(ball.getX() + ball.getWidth() + 1, ball.getY() + ball.getHeight() / 2);
 			if (obj instanceof GRect) {
 				remove(obj);
-				enemies.remove(obj);
+				this.enemies.remove(obj);
+				this.enemiesRemoved++; // Increment enemiesRemoved counter
 			}
 		}
 	}
@@ -103,6 +113,17 @@ public class DodgeBall extends GraphicsProgram implements ActionListener {
 		for (GRect enemy : enemies) {
 			enemy.move(0, rgen.nextInt(-SPEED, SPEED));
 		}
+	}
+	
+	private void endGame() {
+		movement.stop();
+		removeAll();
+		
+		GLabel lostMessage1 = new GLabel ("You lost - Score: " + this.numTimes, WINDOW_WIDTH / 2 - 50, WINDOW_HEIGHT / 2);
+		add(lostMessage1);
+		
+		GLabel lostMessage2 = new GLabel ("Enemies removed: " + this.enemiesRemoved, WINDOW_WIDTH / 2 - 50, WINDOW_HEIGHT / 2 + 20);
+		add(lostMessage2);
 	}
 	
 	public void init() {
